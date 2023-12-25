@@ -141,6 +141,37 @@
     <!-- 引入 Bootstrap JS -->
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
+
+        const isWebBluetoothSupported = () => {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (
+                (userAgent.includes('cros') && userAgent.includes('chrome')) || // Chrome on ChromeOS
+                (userAgent.includes('android') && userAgent.includes('chrome') && parseInt(/chrome\/(\d+)/.exec(userAgent)[1]) >= 70) || // Chrome on Android 6.0 or higher
+                (userAgent.includes('macintosh') && userAgent.includes('chrome') && parseInt(/chrome\/(\d+)/.exec(userAgent)[1]) >= 56) || // Chrome on Mac 56 or higher
+                (userAgent.includes('windows nt 10.0') && userAgent.includes('chrome') && parseInt(/chrome\/(\d+)/.exec(userAgent)[1]) >= 70) // Chrome on Windows 10 70 or higher
+            ) {
+                return true; // 浏览器符合要求
+            }
+
+            return false; // 浏览器不符合要求
+        };
+
+        window.onload = function () {
+            if (!isWebBluetoothSupported()) {
+                alert('Sorry, your browser does not support Web Bluetooth.');
+                disableButtons();
+            }
+        };
+
+        function disableButtons() {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5'; // 使按钮看起来置灰
+                // 你也可以应用其他样式来表示按钮不可用状态
+            });
+        }
+
         let deviceOption = {
             deviceNamePrefix: { namePrefix: 'EM' },
             serviceId: '0000fee0-0000-1000-8000-00805f9b34fb',
@@ -156,7 +187,6 @@
          */
         function onReconnectButtonClick() {
             onReadConnectClick().then(res => {
-                console.log("蓝牙设备连接状态", deviceOption.connect)
                 if (deviceOption.connect) {
                     connecthandleDom();
                 }
@@ -261,9 +291,13 @@
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
             characteristicReadChannel.startNotifications().then(() => {
+                console.log('> Notifications started');
                 characteristicReadChannel.addEventListener('characteristicvaluechanged', handleMemorizedWifiListChanged);
-            });
-            writeCommand(characteristicWriteChannel, cmd);
+            }).then(() => {
+                console.log('> writeCommand : { cmd: 2 }');
+                writeCommand(characteristicWriteChannel, cmd);
+            })
+
         }
 
         /*
@@ -277,9 +311,8 @@
             characteristicReadChannel.readValue();//读取命令
             characteristicReadChannel.startNotifications();
             characteristicReadChannel.addEventListener('characteristicvaluechanged', handleNearbyWifiList);
-            setTimeout(function () {
-                writeCommand(characteristicWriteChannel, cmd);
-            }, 3000);
+            writeCommand(characteristicWriteChannel, cmd);
+
         }
 
         /*
