@@ -100,6 +100,36 @@
         #floatingPassword {
             border-color: #f0f0f0;
         }
+
+        .console-output-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .console-output {
+            background-color: black;
+            color: white;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            max-height: 800px;
+            overflow-y: auto;
+            display: none;
+            /* 初始状态隐藏 */
+            width: 600px;
+            /* 控制宽度 */
+            border-radius: 5px;
+            /* 可以添加圆角 */
+        }
+
+        .console-output-toggle {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
     </style>
 </head>
 
@@ -207,10 +237,33 @@
             </div>
         </div>
     </div>
+    <!--日志区域-->
+    <div class="console-output-container">
+        <div class="console-output-toggle" onclick="toggleConsoleOutput()">Show Log</div>
+        <div class="console-output" id="consoleOutput"></div>
+    </div>
 
     <!-- 引入 Bootstrap JS -->
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
+
+        var originalConsoleLog = console.log;
+
+        console.log = function () {
+            var outputDiv = document.getElementById('consoleOutput');
+            var newLog = document.createElement('p');
+            var timestamp = '[' + new Date().toLocaleString() + ']';
+            var logMessage = timestamp + ' ' + Array.from(arguments).join(' ');
+
+            newLog.textContent = logMessage;
+            outputDiv.appendChild(newLog);
+            originalConsoleLog.apply(console, arguments);
+        };
+
+        function toggleConsoleOutput() {
+            var consoleOutput = document.querySelector('.console-output');
+            consoleOutput.style.display = consoleOutput.style.display === 'none' ? 'block' : 'none';
+        }
 
         const isWebBluetoothSupported = () => {
             const userAgent = navigator.userAgent.toLowerCase();
@@ -233,7 +286,7 @@
             }
         };
 
-        function disableButtons () {
+        function disableButtons() {
             const buttons = document.querySelectorAll('button');
             buttons.forEach(button => {
                 button.disabled = true;
@@ -255,7 +308,7 @@
         /*
          监听点击连接蓝牙事件
          */
-        function onReconnectButtonClick () {
+        function onReconnectButtonClick() {
             onReadConnectClick().then(res => {
                 if (deviceOption.connect) {
                     connecthandleDom();
@@ -265,7 +318,7 @@
         /*
         断开蓝牙连接事件
         */
-        function onDisconnectButtonClick () {
+        function onDisconnectButtonClick() {
             if (!device) {
                 return;
             }
@@ -277,7 +330,7 @@
         /*
         重置全局设备变量
         */
-        function rest () {
+        function rest() {
             device = '';
             deviceOption.connect = false;
         }
@@ -286,7 +339,7 @@
         /*
         准备开始连接蓝牙
         */
-        async function onReadConnectClick () {
+        async function onReadConnectClick() {
             try {
                 if (!device) {
                     // 扫码蓝牙设备
@@ -302,13 +355,13 @@
             }
         }
 
-        function connecthandleDom () {
+        function connecthandleDom() {
             document.getElementById("connectBtn").style.display = "none";
             document.getElementById("disConnectBtn").style.display = "block";
             document.getElementById("connectStatus").innerHTML = "Connected";
         }
 
-        function disConnecthandleDom () {
+        function disConnecthandleDom() {
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("disConnectBtn").style.display = "none";
             document.getElementById("connectStatus").innerHTML = "Not Connected";
@@ -318,7 +371,7 @@
         /*
          扫描蓝牙设备
         */
-        async function startScan () {
+        async function startScan() {
             console.log('Requesting any Bluetooth Device...');
             device = await navigator.bluetooth.requestDevice({
                 // filters: [...] <- Prefer filters to save energy & show relevant devices.
@@ -331,7 +384,7 @@
         /*
         处理断开蓝牙连接
         */
-        async function handleDisconnected () {
+        async function handleDisconnected() {
             console.log('> Bluetooth Device disconnected');
             try {
                 rest()
@@ -345,7 +398,7 @@
         /*
         获取service服务
         */
-        async function getServcie () {
+        async function getServcie() {
             console.log('Connecting to GATT Server...');
             const server = await device.gatt.connect();
             deviceOption.connect = device.gatt.connected;
@@ -356,7 +409,7 @@
         /*
         从设备端拉取wifi记忆列表
         */
-        async function fetchMemorizedWifiList () {
+        async function fetchMemorizedWifiList() {
             const cmd = { cmd: 2 }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
@@ -373,7 +426,7 @@
         /*
         获取邻近周围wifi列表
         */
-        async function fetchNearbyWifiList () {
+        async function fetchNearbyWifiList() {
             // TODO 需等设备端给接口定义
             const cmd = { cmd: 4 }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
@@ -388,7 +441,7 @@
         /*
         删除记忆wifi数据
         */
-        async function deleteMemorizedWifiList () {
+        async function deleteMemorizedWifiList() {
             if (!deleteName) {
                 return
             }
@@ -404,7 +457,7 @@
         /*
          添加wifi
         */
-        async function addWifi (ssid, pwd) {
+        async function addWifi(ssid, pwd) {
             const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
@@ -418,7 +471,7 @@
         /*
         渲染wifi记忆列表数据
         */
-        function handleMemorizedWifiListChanged (event) {
+        function handleMemorizedWifiListChanged(event) {
             let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
 
             renderList(wifiListJson)
@@ -426,7 +479,7 @@
         }
 
         // 渲染记忆列表方法
-        function renderList (list) {
+        function renderList(list) {
             if (list.code == 0) {
                 // 获取按钮元素 
                 const myButton = document.getElementById('deleteButton');
@@ -487,7 +540,7 @@
         /*
         处理删除记忆wifi，渲染数据
         */
-        function handleRemoveMemorizedWifiListChanged (event) {
+        function handleRemoveMemorizedWifiListChanged(event) {
             let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
             console.log('fetch wifi list-->', wifiListJson);
             renderList(wifiListJson)
@@ -496,13 +549,13 @@
         /*
         渲染邻近周围wifi列表
         */
-        function handleNearbyWifiList (event) {
+        function handleNearbyWifiList(event) {
             let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
             console.log('fetch wifi list-->', wifiListJson);
         }
 
         // 写指令
-        async function writeCommand (characteristic, data) {
+        async function writeCommand(characteristic, data) {
             try {
                 await characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)));
                 console.log('指令发送成功:', data);
