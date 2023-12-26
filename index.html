@@ -78,6 +78,11 @@
             justify-content: space-between;
         }
 
+        .list-group-item.selected {
+            background-color: #f0f0f0;
+            /* 选中项的背景颜色 */
+        }
+
         .list-wifi svg {
             color: #007FFF;
         }
@@ -183,56 +188,15 @@
         <div class="card text-center mt-3">
             <div class="modal-body p-5 pt-0 pb-4">
                 <div class="fs-4 text-start pt-3 pb-3">Adding WiFi</div>
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <div class="list-name">first Wifi</div>
-                        <div class="list-wifi">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-wifi" viewBox="0 0 16 16">
-                                <path
-                                    d="M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z">
-                                </path>
-                                <path
-                                    d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z">
-                                </path>
-                            </svg>
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                        <div class="list-name">second Wifi</div>
-                        <div class="list-wifi">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-wifi" viewBox="0 0 16 16">
-                                <path
-                                    d="M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z">
-                                </path>
-                                <path
-                                    d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z">
-                                </path>
-                            </svg>
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                        <div class="list-name">third Wifi</div>
-                        <div class="list-wifi">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-wifi" viewBox="0 0 16 16">
-                                <path
-                                    d="M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z">
-                                </path>
-                                <path
-                                    d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z">
-                                </path>
-                            </svg>
-                        </div>
-                    </li>
+                <ul class="list-group" id="adding-wifi">
+
                 </ul>
                 <div class="form-floating mb-3 mt-4">
                     <input type="password" class="form-control rounded-3" id="floatingPassword" placeholder="Password">
                     <label for="floatingPassword">Password</label>
                 </div>
                 <div class="mt-4">
-                    <button class="w-100 btn btn-lg text-bg-success">Add</button>
+                    <button class="w-100 btn btn-lg text-bg-success" onclick="addWifiClick()">Add</button>
                 </div>
             </div>
         </div>
@@ -248,7 +212,6 @@
     <script>
 
         var originalConsoleLog = console.log;
-
         console.log = function () {
             var outputDiv = document.getElementById('consoleOutput');
             var newLog = document.createElement('p');
@@ -284,6 +247,7 @@
                 alert('Sorry, your browser does not support Web Bluetooth.');
                 disableButtons();
             }
+            appendAddingWiFiList();
         };
 
         function disableButtons() {
@@ -541,9 +505,8 @@
         处理删除记忆wifi，渲染数据
         */
         function handleRemoveMemorizedWifiListChanged(event) {
-            let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
-            console.log('fetch wifi list-->', wifiListJson);
-            renderList(wifiListJson)
+            let response = JSON.parse(new TextDecoder().decode(event.target.value));
+            console.log('remove wifi responese-->', response);
         }
 
         /*
@@ -558,9 +521,59 @@
         async function writeCommand(characteristic, data) {
             try {
                 await characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)));
-                console.log('指令发送成功:', data);
+                console.log('commond send success', data);
             } catch (error) {
                 console.error('指令发送失败:', error);
+            }
+        }
+
+        function buildWifiTempalte(wifiName) {
+            var wifiTempalte = `<li class="list-group-item adding-wifi-item" onclick="chooseAddingWiFiClick(this)">
+            <div class="list-name">${wifiName}</div >
+                <div class="list-wifi">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-wifi" viewBox="0 0 16 16">
+                        <path
+                            d="M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z">
+                        </path>
+                        <path
+                            d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z">
+                        </path>
+                    </svg>
+                </div>
+                    </li > `
+            return wifiTempalte
+        }
+
+
+        // 渲染
+        function appendAddingWiFiList() {
+            var addingWifiNode = document.getElementById('adding-wifi');
+            var wifiTempalte = buildWifiTempalte('SuperLucky_2.4G');
+            var wifiTempalte2 = buildWifiTempalte('Supe11r_2.4G')
+            addingWifiNode.innerHTML += wifiTempalte;
+            addingWifiNode.innerHTML += wifiTempalte2;
+
+        }
+
+        // 选择要添加的wifi事件
+        function chooseAddingWiFiClick(node) {
+            // 移除所有列表项的选中状态
+            var addingWifiListNode = document.querySelectorAll('.adding-wifi-item');
+            addingWifiListNode.forEach(function (addingwifiNode) {
+                addingwifiNode.classList.remove('selected');
+            });
+            // 将当前点击的列表项标记为选中状态
+            node.classList.add('selected');
+        }
+
+        // 添加wfi事件
+        function addWifiClick() {
+            var selectedWifiItem = document.querySelectorAll('.adding-wifi-item.selected');
+            if (selectedWifiItems.length > 0) {
+                var selectedWifiItem = selectedWifiItems[0];
+                var listName = selectedWifiItem.querySelector('.list-name').textContent;
+                console.log('List Name:', listName);
             }
         }
     </script>
