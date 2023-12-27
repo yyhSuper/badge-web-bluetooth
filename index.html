@@ -173,14 +173,13 @@
         <div class="card text-center mt-3">
             <div class="modal-body p-5 pt-0 pb-4">
                 <div class="fs-4 text-start pt-3 pb-3">Memorized WiFi</div>
-                <ul class="list-group" id="wifiWrap">
-                    <!-- <li class="list-group-item"><span>first Wifi</span></li>
-                    <li class="list-group-item"><span>second Wifi</span></li>
-                    <li class="list-group-item"><span>third Wifi</span></li> -->
+                <ul class="list-group" id="memorized-wifi">
+                    <!-- Memorized WiFi 渲染区域-->
+
                 </ul>
                 <div class="no-data" id="noData">No Data</div>
                 <div class="mt-4">
-                    <button id="deleteButton" onclick="deleteMemorizedWifiList()"
+                    <button id="deleteButton" onclick="removeWifiClick()"
                         class="w-100 btn btn-lg text-bg-secondary">Delete</button>
                 </div>
             </div>
@@ -189,10 +188,11 @@
             <div class="modal-body p-5 pt-0 pb-4">
                 <div class="fs-4 text-start pt-3 pb-3">Adding WiFi</div>
                 <ul class="list-group" id="adding-wifi">
-
+                    <!-- adding wifi 渲染区域-->
                 </ul>
+                <div class="no-data" id="noData">No Data</div>
                 <div class="form-floating mb-3 mt-4">
-                    <input type="password" class="form-control rounded-3" id="floatingPassword" placeholder="Password">
+                    <input type="password" class="form-control rounded-3" id="pwd" placeholder="Password">
                     <label for="floatingPassword">Password</label>
                 </div>
                 <div class="mt-4">
@@ -210,7 +210,6 @@
     <!-- 引入 Bootstrap JS -->
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-
         var originalConsoleLog = console.log;
         console.log = function () {
             var outputDiv = document.getElementById('consoleOutput');
@@ -247,7 +246,10 @@
                 alert('Sorry, your browser does not support Web Bluetooth.');
                 disableButtons();
             }
+
+            // todo debug使用，后期删除
             appendAddingWiFiList();
+            appendMemorizrdWiFiList();
         };
 
         function disableButtons() {
@@ -399,17 +401,13 @@
             characteristicReadChannel.startNotifications();
             characteristicReadChannel.addEventListener('characteristicvaluechanged', handleNearbyWifiList);
             writeCommand(characteristicWriteChannel, cmd);
-
         }
 
         /*
         删除记忆wifi数据
         */
-        async function deleteMemorizedWifiList() {
-            if (!deleteName) {
-                return
-            }
-            const cmd = { cmd: 3, data: { ssid: deleteName } }
+        async function removeMemorizedWifiList(ssid) {
+            const cmd = { cmd: 3, data: { ssid: ssid } }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
             characteristicReadChannel.readValue();//读取命令
@@ -433,74 +431,71 @@
 
 
         /*
-        渲染wifi记忆列表数据
+        监听处理记忆wifi蓝牙通知
         */
         function handleMemorizedWifiListChanged(event) {
             let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
-
-            renderList(wifiListJson)
             console.log('fetch wifi list-->', wifiListJson);
         }
 
-        // 渲染记忆列表方法
-        function renderList(list) {
-            if (list.code == 0) {
-                // 获取按钮元素 
-                const myButton = document.getElementById('deleteButton');
-                deleteName = ''
-                // 添加特定的类名
-                myButton.classList.add('btn', 'text-bg-danger');
-                let wifiList = JSON.parse(list.msg)
-                if (wifiList.length > 0) {
-                    document.getElementById('noData').style.display = 'none'
-                    let wrap = document.getElementById('wifiWrap');
-                    wrap.innerHTML = '';
-                    wifiList.forEach(wifi => {
-                        const listItem = document.createElement('li');
-                        listItem.className = 'list-group-item';
 
-                        const listName = document.createElement('div');
-                        listName.className = 'list-name';
-                        listName.textContent = wifi.ssid; // Replace with your desired text
-                        listItem.appendChild(listName);
-                        const listWifi = document.createElement('div');
-                        listWifi.className = 'list-wifi';
-
-                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                        svg.setAttribute('width', '16');
-                        svg.setAttribute('height', '16');
-                        svg.setAttribute('fill', 'currentColor');
-                        svg.setAttribute('class', 'bi bi-wifi');
-                        svg.setAttribute('viewBox', '0 0 16 16');
-
-                        // Create the path elements
-                        const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        path1.setAttribute('d', 'M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z');
-                        const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        path2.setAttribute('d', 'M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z');
-
-                        svg.appendChild(path1);
-                        svg.appendChild(path2);
-
-                        listWifi.appendChild(svg);
-
-                        listItem.appendChild(listWifi);
-
-                        listItem.addEventListener('click', () => {
-                            deleteName = wifi.ssid;
-
-                        });
-
-                        wrap.appendChild(listItem);
-                    });
-                } else {
-                    document.getElementById('noData').style.display = 'block'
-                    myButton.classList.remove('btn', 'text-bg-danger');
-                }
-
-            }
+        // 记忆wifi模板
+        function buildMemorizedWifiTemplate(wifiName) {
+            var wifiTempalte = `<li class="list-group-item memorized-wifi-item" onclick="chooseMemorizedWiFiClick(this)">
+            <div class="list-name">${wifiName}</div >
+                <div class="list-wifi">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-wifi" viewBox="0 0 16 16">
+                        <path
+                            d="M15.384 6.115a.485.485 0 0 0-.047-.736A12.444 12.444 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c2.507 0 4.827.802 6.716 2.164.205.148.49.13.668-.049z">
+                        </path>
+                        <path
+                            d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065A8.46 8.46 0 0 1 8 7a8.46 8.46 0 0 1 4.576 1.336c.206.132.48.108.653-.065zm-2.183 2.183c.226-.226.185-.605-.1-.75A6.473 6.473 0 0 0 8 9c-1.06 0-2.062.254-2.946.704-.285.145-.326.524-.1.75l.015.015c.16.16.407.19.611.09A5.478 5.478 0 0 1 8 10c.868 0 1.69.201 2.42.56.203.1.45.07.61-.091l.016-.015zM9.06 12.44c.196-.196.198-.52-.04-.66A1.99 1.99 0 0 0 8 11.5a1.99 1.99 0 0 0-1.02.28c-.238.14-.236.464-.04.66l.706.706a.5.5 0 0 0 .707 0l.707-.707z">
+                        </path>
+                    </svg>
+                </div>
+                    </li > `
+            return wifiTempalte
         }
+
+        // 渲染记忆wifi列表
+        function appendMemorizrdWiFiList() {
+            var addingWifiNode = document.getElementById('memorized-wifi');
+            var wifiTempalte = buildMemorizedWifiTemplate('SuperLucky_2.4G');
+            var wifiTempalte2 = buildMemorizedWifiTemplate('Supe11r_2.4G')
+            addingWifiNode.innerHTML += wifiTempalte;
+            addingWifiNode.innerHTML += wifiTempalte2;
+        }
+
+        // 选择要删除的wifi事件
+        function chooseMemorizedWiFiClick(node) {
+            // 移除所有列表项的选中状态
+            var removeWifiListNode = document.querySelectorAll('.memorized-wifi-item');
+            removeWifiListNode.forEach(function (removeWifiNode) {
+                removeWifiNode.classList.remove('selected');
+            });
+            // 将当前点击的列表项标记为选中状态
+            node.classList.add('selected');
+        }
+
+        // 删除wifi事件
+        function removeWifiClick() {
+            if (!deviceOption.connect) {
+                alert("Bluetooth not connected.")
+                return;
+            }
+            var selectedWifiItemList = document.querySelectorAll('.memorized-wifi-item.selected');
+            if (!selectedWifiItemList || selectedWifiItemList.length <= 0) {
+                alert("Select Wi-Fi to remove.")
+                return;
+            }
+            var selectedWifiItem = selectedWifiItemList[0];
+            var ssId = selectedWifiItem.querySelector('.list-name').textContent;
+            // 删除蓝牙设备wifi列表数据
+            removeMemorizedWifiList(ssid, pwd);
+            // todo 渲染 记忆wifi列表
+        }
+
         /*
         处理删除记忆wifi，渲染数据
         */
@@ -510,7 +505,7 @@
         }
 
         /*
-        渲染邻近周围wifi列表
+        监听处理邻里周围wifi列表
         */
         function handleNearbyWifiList(event) {
             let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
@@ -527,7 +522,8 @@
             }
         }
 
-        function buildWifiTempalte(wifiName) {
+        // 邻里wifi模板
+        function buildNearbyWifiTempalte(wifiName) {
             var wifiTempalte = `<li class="list-group-item adding-wifi-item" onclick="chooseAddingWiFiClick(this)">
             <div class="list-name">${wifiName}</div >
                 <div class="list-wifi">
@@ -546,11 +542,11 @@
         }
 
 
-        // 渲染
+        // 渲染邻里周围wifi列表
         function appendAddingWiFiList() {
             var addingWifiNode = document.getElementById('adding-wifi');
-            var wifiTempalte = buildWifiTempalte('SuperLucky_2.4G');
-            var wifiTempalte2 = buildWifiTempalte('Supe11r_2.4G')
+            var wifiTempalte = buildNearbyWifiTempalte('SuperLucky_2.4G');
+            var wifiTempalte2 = buildNearbyWifiTempalte('Supe11r_2.4G')
             addingWifiNode.innerHTML += wifiTempalte;
             addingWifiNode.innerHTML += wifiTempalte2;
 
@@ -569,14 +565,24 @@
 
         // 添加wfi事件
         function addWifiClick() {
-            var selectedWifiItem = document.querySelectorAll('.adding-wifi-item.selected');
-            if (selectedWifiItems.length > 0) {
-                var selectedWifiItem = selectedWifiItems[0];
-                var listName = selectedWifiItem.querySelector('.list-name').textContent;
-                console.log('List Name:', listName);
+            if (!deviceOption.connect) {
+                alert("Bluetooth not connected.")
+                return;
             }
+            var selectedWifiItemList = document.querySelectorAll('.adding-wifi-item.selected');
+            if (!selectedWifiItemList || selectedWifiItemList.length <= 0) {
+                alert("Select Wi-Fi to add.")
+                return;
+            }
+            var selectedWifiItem = selectedWifiItemList[0];
+            var ssId = selectedWifiItem.querySelector('.list-name').textContent;
+            var pwd = document.getElementById('pwd').value;
+            if (pwd === null || pwd === undefined || pwd.trim() === '') {
+                alert("Please enter the WiFi password.")
+            }
+            // 密码同步给蓝牙设备
+            addWifi(ssId, pwd);
+            // todo 渲染 记忆wifi列表
         }
     </script>
 </body>
-
-</html>
