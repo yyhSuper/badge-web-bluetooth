@@ -177,7 +177,7 @@
                     <!-- Memorized WiFi 渲染区域-->
 
                 </ul>
-                <div class="no-data" id="noData">No Data</div>
+                <div class="no-data" id="memorized-wifi-no-data" style="display: none;">No Data</div>
                 <div class="mt-4">
                     <button id="deleteButton" onclick="removeWifiClick()"
                         class="w-100 btn btn-lg text-bg-secondary">Delete</button>
@@ -190,7 +190,7 @@
                 <ul class="list-group" id="adding-wifi">
                     <!-- adding wifi 渲染区域-->
                 </ul>
-                <div class="no-data" id="noData">No Data</div>
+                <div class="no-data" id="adding-wifi-no-data" style="display: none;">No Data</div>
                 <div class="form-floating mb-3 mt-4">
                     <input type="password" class="form-control rounded-3" id="pwd" placeholder="Password">
                     <label for="floatingPassword">Password</label>
@@ -248,8 +248,28 @@
             }
 
             // todo debug使用，后期删除
-            appendAddingWiFiList();
-            appendMemorizrdWiFiList();
+            appendAddingWiFiList({
+                "msg": [
+                    {
+                        "ssid": ""
+                    },
+                    {
+                        "ssid": ""
+                    }
+                ],
+                "code": 0
+            });
+            appendMemorizrdWiFiList({
+                "msg": [
+                    {
+                        "ssid": ""
+                    },
+                    {
+                        "ssid": ""
+                    }
+                ],
+                "code": 0
+            });
         };
 
         function disableButtons() {
@@ -327,6 +347,7 @@
             document.getElementById("connectStatus").innerHTML = "Connected";
         }
 
+
         function disConnecthandleDom() {
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("disConnectBtn").style.display = "none";
@@ -385,8 +406,7 @@
             }).then(() => {
                 console.log('> writeCommand : { cmd: 2 }');
                 writeCommand(characteristicWriteChannel, cmd);
-            })
-
+            });
         }
 
         /*
@@ -459,7 +479,13 @@
         }
 
         // 渲染记忆wifi列表
-        function appendMemorizrdWiFiList() {
+        function appendMemorizrdWiFiList(memorizrdWifiListJson) {
+            var memorizrdWifiList = memorizrdWifiListJson.msg;
+            if (!memorizrdWifiList || memorizrdWifiList.length <= 0) {
+                document.getElementById('memorized-wifi-no-data').style.display = "none";
+                return;
+            }
+
             var addingWifiNode = document.getElementById('memorized-wifi');
             var wifiTempalte = buildMemorizedWifiTemplate('SuperLucky_2.4G');
             var wifiTempalte2 = buildMemorizedWifiTemplate('Supe11r_2.4G')
@@ -543,7 +569,12 @@
 
 
         // 渲染邻里周围wifi列表
-        function appendAddingWiFiList() {
+        function appendAddingWiFiList(nearbyWifiListJson) {
+            var nearbyWifiList = nearbyWifiListJson.msg;
+            if (!nearbyWifiList || nearbyWifiList.length <= 0) {
+                document.getElementById('adding-wifi-no-data').style.display = "none";
+                return;
+            }
             var addingWifiNode = document.getElementById('adding-wifi');
             var wifiTempalte = buildNearbyWifiTempalte('SuperLucky_2.4G');
             var wifiTempalte2 = buildNearbyWifiTempalte('Supe11r_2.4G')
