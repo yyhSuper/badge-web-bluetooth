@@ -177,10 +177,10 @@
                     <!-- Memorized WiFi 渲染区域-->
 
                 </ul>
-                <div class="no-data" id="memorized-wifi-no-data" style="display: none;">No Data</div>
+                <div class="no-data" id="memorized-wifi-no-data">No Data</div>
                 <div class="mt-4">
-                    <button id="deleteButton" onclick="removeWifiClick()"
-                        class="w-100 btn btn-lg text-bg-secondary">Delete</button>
+                    <button id="removeWifiBtn" onclick="removeWifiClick()" class="w-100 btn btn-lg text-bg-secondary"
+                        disabled=true>Delete</button>
                 </div>
             </div>
         </div>
@@ -190,13 +190,14 @@
                 <ul class="list-group" id="adding-wifi">
                     <!-- adding wifi 渲染区域-->
                 </ul>
-                <div class="no-data" id="adding-wifi-no-data" style="display: none;">No Data</div>
+                <div class="no-data" id="adding-wifi-no-data">No Data</div>
                 <div class="form-floating mb-3 mt-4">
                     <input type="password" class="form-control rounded-3" id="pwd" placeholder="Password">
                     <label for="floatingPassword">Password</label>
                 </div>
                 <div class="mt-4">
-                    <button class="w-100 btn btn-lg text-bg-success" onclick="addWifiClick()">Add</button>
+                    <button id="addWifiBtn" class="w-100 btn btn-lg text-bg-secondary" disabled=true
+                        onclick="addWifiClick()">Add</button>
                 </div>
             </div>
         </div>
@@ -248,28 +249,63 @@
             }
 
             // todo debug使用，后期删除
-            appendAddingWiFiList({
-                "msg": [
-                    {
-                        "ssid": ""
-                    },
-                    {
-                        "ssid": ""
-                    }
-                ],
-                "code": 0
-            });
-            appendMemorizrdWiFiList({
-                "msg": [
-                    {
-                        "ssid": ""
-                    },
-                    {
-                        "ssid": ""
-                    }
-                ],
-                "code": 0
-            });
+            // appendAddingWiFiList({
+            //     "msg": [
+            //         {
+            //             "ssid": "1"
+            //         },
+            //         {
+            //             "ssid": "2"
+            //         }, {
+            //             "ssid": "4"
+            //         },
+            //         {
+            //             "ssid": "5"
+            //         }, {
+            //             "ssid": "6"
+            //         },
+            //         {
+            //             "ssid": "7"
+            //         }, {
+            //             "ssid": "1"
+            //         },
+            //         {
+            //             "ssid": "2"
+            //         }, {
+            //             "ssid": "4"
+            //         },
+            //         {
+            //             "ssid": "5"
+            //         }, {
+            //             "ssid": "6"
+            //         },
+            //         {
+            //             "ssid": "7"
+            //         }
+            //     ],
+            //     "code": 0
+            // });
+            // appendMemorizrdWiFiList({
+            //     "msg": [
+            //         {
+            //             "ssid": "a1"
+            //         },
+            //         {
+            //             "ssid": "a2"
+            //         }, {
+            //             "ssid": "a3"
+            //         },
+            //         {
+            //             "ssid": "a4"
+            //         }, {
+            //             "ssid": "a5"
+            //         },
+            //         {
+            //             "ssid": "a6"
+            //         }
+            //     ],
+            //     "code": 0
+            // });
         };
 
         function disableButtons() {
@@ -320,8 +356,6 @@
             device = '';
             deviceOption.connect = false;
         }
-
-
         /*
         准备开始连接蓝牙
         */
@@ -437,7 +471,7 @@
         }
 
         /*
-         添加wifi
+         添加wifi到蓝牙设备
         */
         async function addWifi(ssid, pwd) {
             const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
@@ -449,17 +483,18 @@
             writeCommand(characteristicWriteChannel, cmd);
         }
 
-
         /*
         监听处理记忆wifi蓝牙通知
         */
         function handleMemorizedWifiListChanged(event) {
-            let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
-            console.log('fetch wifi list-->', wifiListJson);
+            var value = event.target.value;
+            var text = new TextDecoder().decode(value);
+            console.log('fetch memorized wifi list response-->', text);
+            let wifiListJson = JSON.parse(text);
+            appendMemorizrdWiFiList(wifiListJson);
         }
 
-
-        // 记忆wifi模板
+        // 构建记忆wifi模板
         function buildMemorizedWifiTemplate(wifiName) {
             var wifiTempalte = `<li class="list-group-item memorized-wifi-item" onclick="chooseMemorizedWiFiClick(this)">
             <div class="list-name">${wifiName}</div >
@@ -480,9 +515,13 @@
 
         // 渲染记忆wifi列表
         function appendMemorizrdWiFiList(memorizrdWifiListJson) {
+            if (memorizrdWifiListJson.code !== 0 && memorizrdWifiListJson.code !== '0') {
+                disabledMemorizedWifiBtn();
+                return;
+            }
             var memorizrdWifiList = memorizrdWifiListJson.msg;
             if (!memorizrdWifiList || memorizrdWifiList.length <= 0) {
-                document.getElementById('memorized-wifi-no-data').style.display = "none";
+                disabledMemorizedWifiBtn();
                 return;
             }
             var wifiTempalte = '';
@@ -491,6 +530,7 @@
             });
             var addingWifiNode = document.getElementById('memorized-wifi');
             addingWifiNode.innerHTML += wifiTempalte;
+            enabledMemorizedWifiBtn();
         }
 
         // 选择要删除的wifi事件
@@ -523,10 +563,13 @@
         }
 
         /*
-        处理删除记忆wifi，渲染数据
+        监听处理删除记忆wifi，渲染数据
         */
         function handleRemoveMemorizedWifiListChanged(event) {
-            let response = JSON.parse(new TextDecoder().decode(event.target.value));
+            var value = event.target.value;
+            var text = new TextDecoder().decode(value);
+            console.log('remove wifi responese-->', text);
+            let response = JSON.parse(new TextDecoder().decode(text));
             console.log('remove wifi responese-->', response);
         }
 
@@ -534,8 +577,11 @@
         监听处理邻里周围wifi列表
         */
         function handleNearbyWifiList(event) {
-            let wifiListJson = JSON.parse(new TextDecoder().decode(event.target.value));
-            console.log('fetch wifi list-->', wifiListJson);
+            var value = event.target.value;
+            var text = new TextDecoder().decode(value);
+            console.log('fetch nearby wifi list response-->', text);
+            let wifiListJson = JSON.parse(text);
+            appendAddingWiFiList(wifiListJson);
         }
 
         // 写指令
@@ -567,12 +613,15 @@
             return wifiTempalte
         }
 
-
         // 渲染邻里周围wifi列表
         function appendAddingWiFiList(nearbyWifiListJson) {
+            if (nearbyWifiListJson.code !== 0 && nearbyWifiListJson.code !== '0') {
+                disabledAddWifiBtn();
+                return;
+            }
             var nearbyWifiList = nearbyWifiListJson.msg;
             if (!nearbyWifiList || nearbyWifiList.length <= 0) {
-                document.getElementById('adding-wifi-no-data').style.display = "none";
+                disabledAddWifiBtn();
                 return;
             }
             var wifiTempalte = '';
@@ -581,6 +630,7 @@
             });
             var addingWifiNode = document.getElementById('adding-wifi');
             addingWifiNode.innerHTML = wifiTempalte;
+            enabledAddWifiBtn();
         }
 
         // 选择要添加的wifi事件
@@ -614,6 +664,38 @@
             // 密码同步给蓝牙设备
             addWifi(ssId, pwd);
             // todo 渲染 记忆wifi列表
+        }
+
+        // 显示AddingWifi区域无数据效果，禁用添加wifi按钮
+        function disabledAddWifiBtn() {
+            document.getElementById('adding-wifi-no-data').style.display = "block";
+            var addWifiBtn = document.getElementById('addWifiBtn');
+            addWifiBtn.disabled = true;
+            addWifiBtn.className = 'w-100 btn btn-lg text-bg-secondary';
+        }
+
+        // 显示Adding Wifi区域有数据效果，启用添加wifi按钮
+        function enabledAddWifiBtn() {
+            document.getElementById('adding-wifi-no-data').style.display = "none";
+            var addWifiBtn = document.getElementById('addWifiBtn');
+            addWifiBtn.disabled = false;
+            addWifiBtn.className = 'w-100 btn btn-lg text-bg-success';
+        }
+
+        // 显示Memorized Wifi区域无数据效果，禁用删除wifi按钮
+        function disabledMemorizedWifiBtn() {
+            document.getElementById('memorized-wifi-no-data').style.display = "block";
+            var addWifiBtn = document.getElementById('removeWifiBtn');
+            addWifiBtn.disabled = true;
+            addWifiBtn.className = 'w-100 btn btn-lg text-bg-secondary';
+        }
+
+        // 显示Adding Wifi区域无数据效果，启用添加wifi按钮
+        function enabledMemorizedWifiBtn() {
+            document.getElementById('memorized-wifi-no-data').style.display = "none";
+            var addWifiBtn = document.getElementById('removeWifiBtn');
+            addWifiBtn.disabled = false;
+            addWifiBtn.className = 'w-100 btn btn-lg text-bg-success';
         }
     </script>
 </body>
