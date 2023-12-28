@@ -485,12 +485,12 @@
                 document.getElementById('memorized-wifi-no-data').style.display = "none";
                 return;
             }
-
+            var wifiTempalte = '';
+            memorizrdWifiList.forEach(function (wifi) {
+                wifiTempalte += buildMemorizedWifiTemplate(wifi.ssid);
+            });
             var addingWifiNode = document.getElementById('memorized-wifi');
-            var wifiTempalte = buildMemorizedWifiTemplate('SuperLucky_2.4G');
-            var wifiTempalte2 = buildMemorizedWifiTemplate('Supe11r_2.4G')
             addingWifiNode.innerHTML += wifiTempalte;
-            addingWifiNode.innerHTML += wifiTempalte2;
         }
 
         // 选择要删除的wifi事件
@@ -575,12 +575,12 @@
                 document.getElementById('adding-wifi-no-data').style.display = "none";
                 return;
             }
+            var wifiTempalte = '';
+            nearbyWifiList.forEach(function (wifi) {
+                wifiTempalte += buildNearbyWifiTempalte(wifi.ssid);
+            });
             var addingWifiNode = document.getElementById('adding-wifi');
-            var wifiTempalte = buildNearbyWifiTempalte('SuperLucky_2.4G');
-            var wifiTempalte2 = buildNearbyWifiTempalte('Supe11r_2.4G')
-            addingWifiNode.innerHTML += wifiTempalte;
-            addingWifiNode.innerHTML += wifiTempalte2;
-
+            addingWifiNode.innerHTML = wifiTempalte;
         }
 
         // 选择要添加的wifi事件
