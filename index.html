@@ -239,7 +239,7 @@
             originalConsoleLog.apply(console, arguments);
         };
 
-        function toggleConsoleOutput () {
+        function toggleConsoleOutput() {
             var consoleOutput = document.querySelector('.console-output');
             consoleOutput.style.display = consoleOutput.style.display === 'none' ? 'block' : 'none';
         }
@@ -282,6 +282,12 @@
                     },
                     {
                         "ssid": "SuperLucky_2"
+                    },
+                    {
+                        "ssid": "YD_5G"
+                    },
+                    {
+                        "ssid": "YD"
                     }
                 ],
                 "code": 0
@@ -309,7 +315,7 @@
             // });
         };
 
-        function disableButtons () {
+        function disableButtons() {
             const buttons = document.querySelectorAll('button');
             buttons.forEach(button => {
                 button.disabled = true;
@@ -331,7 +337,7 @@
         /*
          监听点击连接蓝牙事件
          */
-        function onReconnectButtonClick () {
+        function onReconnectButtonClick() {
             onReadConnectClick().then(res => {
                 if (deviceOption.connect) {
                     connecthandleDom();
@@ -341,7 +347,7 @@
         /*
         断开蓝牙连接事件
         */
-        function onDisconnectButtonClick () {
+        function onDisconnectButtonClick() {
             if (!device) {
                 return;
             }
@@ -353,16 +359,16 @@
         /*
         重置全局设备变量
         */
-        function rest () {
+        function rest() {
             device = '';
             deviceOption.connect = false;
         }
         /*
         准备开始连接蓝牙
         */
-        async function onReadConnectClick () {
+        async function onReadConnectClick() {
             try {
-                if (!device) {
+                if (!device || !deviceOption.connect) {
                     // 扫码蓝牙设备
                     await startScan();
                     // 获取蓝牙servciee服务
@@ -377,14 +383,14 @@
             }
         }
 
-        function connecthandleDom () {
+        function connecthandleDom() {
             document.getElementById("connectBtn").style.display = "none";
             document.getElementById("disConnectBtn").style.display = "block";
             document.getElementById("connectStatus").innerHTML = "Connected";
         }
 
 
-        function disConnecthandleDom () {
+        function disConnecthandleDom() {
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("disConnectBtn").style.display = "none";
             document.getElementById("connectStatus").innerHTML = "Not Connected";
@@ -394,7 +400,7 @@
         /*
          扫描蓝牙设备
         */
-        async function startScan () {
+        async function startScan() {
             console.log('Requesting any Bluetooth Device...');
             device = await navigator.bluetooth.requestDevice({
                 // filters: [...] <- Prefer filters to save energy & show relevant devices.
@@ -407,7 +413,7 @@
         /*
         处理断开蓝牙连接
         */
-        async function handleDisconnected () {
+        async function handleDisconnected() {
             console.log('> Bluetooth Device disconnected');
             try {
                 rest()
@@ -421,7 +427,7 @@
         /*
         获取service服务
         */
-        async function getServcie () {
+        async function getServcie() {
             console.log('Connecting to GATT Server...');
             const server = await device.gatt.connect();
             deviceOption.connect = device.gatt.connected;
@@ -429,16 +435,31 @@
             service = await server.getPrimaryService(deviceOption.serviceId);
         }
 
+
+        /*
+        添加wifi到蓝牙设备
+        */
+        async function addWifi(ssid, pwd) {
+            const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
+            const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
+            const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
+            characteristicReadChannel.startNotifications().then(() => {
+                characteristicReadChannel.addEventListener('characteristicvaluechanged', handleCharacteristicvaluechanged);
+            }).then(() => {
+                console.log('> writeCommand : { cmd: 1 }');
+                writeCommand(characteristicWriteChannel, cmd);
+            });
+        }
         /*
         从设备端拉取wifi记忆列表
         */
-        async function fetchMemorizedWifiList () {
+        async function fetchMemorizedWifiList() {
             const cmd = { cmd: 2 }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
             characteristicReadChannel.startNotifications().then(() => {
                 console.log('> Notifications started');
-                characteristicReadChannel.addEventListener('characteristicvaluechanged', handleMemorizedWifiListChanged);
+                characteristicReadChannel.addEventListener('characteristicvaluechanged', handleCharacteristicvaluechanged);
             }).then(() => {
                 console.log('> writeCommand : { cmd: 2 }');
                 writeCommand(characteristicWriteChannel, cmd);
@@ -446,58 +467,78 @@
         }
 
         /*
+        删除记忆wifi数据
+        */
+        async function removeMemorizedWifiList(ssid) {
+            const cmd = { cmd: 3, data: { ssid: ssid } }
+            const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
+            const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
+            characteristicReadChannel.startNotifications().then(() => {
+                characteristicReadChannel.addEventListener('characteristicvaluechanged', handleCharacteristicvaluechanged);
+            }).then(() => {
+                console.log('> writeCommand : { cmd: 3 }');
+                writeCommand(characteristicWriteChannel, cmd);
+            });
+        }
+
+        /*
         获取邻近周围wifi列表
         */
-        async function fetchNearbyWifiList () {
+        async function fetchNearbyWifiList() {
             // TODO 需等设备端给接口定义
             const cmd = { cmd: 4 }
             const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
             const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
             characteristicReadChannel.readValue();//读取命令
-            characteristicReadChannel.startNotifications();
-            characteristicReadChannel.addEventListener('characteristicvaluechanged', handleNearbyWifiList);
-            writeCommand(characteristicWriteChannel, cmd);
+            characteristicReadChannel.startNotifications().then(() => {
+                characteristicReadChannel.addEventListener('characteristicvaluechanged', handleCharacteristicvaluechanged);
+            }).then(() => {
+                console.log('> writeCommand : { cmd: 4 }');
+                writeCommand(characteristicWriteChannel, cmd);
+            });
         }
 
-        /*
-        删除记忆wifi数据
+        /**
+        处理监听接收 GATT 通知
         */
-        async function removeMemorizedWifiList (ssid) {
-            const cmd = { cmd: 3, data: { ssid: ssid } }
-            const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
-            const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
-            characteristicReadChannel.readValue();//读取命令
-            characteristicReadChannel.startNotifications();
-            characteristicReadChannel.addEventListener('characteristicvaluechanged', handleRemoveMemorizedWifiListChanged);
-            writeCommand(characteristicWriteChannel, cmd);
-        }
-
-        /*
-         添加wifi到蓝牙设备
-        */
-        async function addWifi (ssid, pwd) {
-            const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
-            const characteristicWriteChannel = await service.getCharacteristic(deviceOption.characteristicWriteChannelId);
-            const characteristicReadChannel = await service.getCharacteristic(deviceOption.characteristicReadChannelId);
-            //characteristicReadChannel.readValue();//读取命令
-            characteristicReadChannel.startNotifications();
-            characteristicReadChannel.addEventListener('characteristicvaluechanged', handleRemoveMemorizedWifiListChanged);
-            writeCommand(characteristicWriteChannel, cmd);
-        }
-
-        /*
-        监听处理记忆wifi蓝牙通知
-        */
-        function handleMemorizedWifiListChanged (event) {
+        function handleCharacteristicvaluechanged(event) {
             var value = event.target.value;
             var text = new TextDecoder().decode(value);
-            console.log('fetch memorized wifi list response-->', text);
-            let wifiListJson = JSON.parse(text);
-            appendMemorizrdWiFiList(wifiListJson);
+            console.log('characteristicvaluechanged -->', text);
+            let response = JSON.parse(text);
+            if (response.cmd === 1) {
+                // 添加wifi
+                console.log('Adding wifi responese-->', response.msg);
+            }
+            if (response.cmd === 2) {
+                // 查询记忆wifi
+                appendMemorizrdWiFiList(response);
+            }
+            if (response.cmd === 3) {
+                // 删除wifi
+                console.log('Remove wifi responese-->', response.msg);
+            }
+            if (response.cmd === 4) {
+                // 查询WIFI周围扫描列表
+                appendAddingWiFiList(response);
+            }
+            event.target.removeEventListener('characteristicvaluechanged', new function () {
+                console.log('移除监听');
+            });
+        }
+
+        // 写指令
+        async function writeCommand(characteristic, data) {
+            try {
+                await characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)));
+                console.log('commond send success', data);
+            } catch (error) {
+                console.error('指令发送失败:', error);
+            }
         }
 
         // 构建记忆wifi模板
-        function buildMemorizedWifiTemplate (wifiName) {
+        function buildMemorizedWifiTemplate(wifiName) {
             var wifiTempalte = `<li class="list-group-item memorized-wifi-item" onclick="chooseMemorizedWiFiClick(this)">
             <div class="list-name">${wifiName}</div >
                 <div class="list-wifi">
@@ -516,8 +557,13 @@
         }
 
         // 渲染记忆wifi列表
-        function appendMemorizrdWiFiList (memorizrdWifiListJson) {
+        function appendMemorizrdWiFiList(memorizrdWifiListJson) {
             if (memorizrdWifiListJson.code !== 0 && memorizrdWifiListJson.code !== '0') {
+                disabledMemorizedWifiBtn();
+                return;
+            }
+
+            if (typeof memorizrdWifiListJson.msg === 'undefined') {
                 disabledMemorizedWifiBtn();
                 return;
             }
@@ -536,7 +582,7 @@
         }
 
         // 选择要删除的wifi事件
-        function chooseMemorizedWiFiClick (node) {
+        function chooseMemorizedWiFiClick(node) {
             // 移除所有列表项的选中状态
             var removeWifiListNode = document.querySelectorAll('.memorized-wifi-item');
             removeWifiListNode.forEach(function (removeWifiNode) {
@@ -547,7 +593,7 @@
         }
 
         // 删除wifi事件
-        function removeWifiClick () {
+        function removeWifiClick() {
             if (!deviceOption.connect) {
                 alert("Bluetooth not connected.")
                 return;
@@ -564,39 +610,10 @@
             // todo 渲染 记忆wifi列表
         }
 
-        /*
-        监听处理删除记忆wifi，渲染数据
-        */
-        function handleRemoveMemorizedWifiListChanged (event) {
-            var value = event.target.value;
-            var text = new TextDecoder().decode(value);
-            console.log('remove wifi responese-->', text);
-            let response = JSON.parse(text);
-        }
 
-        /*
-        监听处理邻里周围wifi列表
-        */
-        function handleNearbyWifiList (event) {
-            var value = event.target.value;
-            var text = new TextDecoder().decode(value);
-            console.log('fetch nearby wifi list response-->', text);
-            let wifiListJson = JSON.parse(text);
-            appendAddingWiFiList(wifiListJson);
-        }
-
-        // 写指令
-        async function writeCommand (characteristic, data) {
-            try {
-                await characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)));
-                console.log('commond send success', data);
-            } catch (error) {
-                console.error('指令发送失败:', error);
-            }
-        }
 
         // 邻里wifi模板
-        function buildNearbyWifiTempalte (wifiName) {
+        function buildNearbyWifiTempalte(wifiName) {
             var wifiTempalte = `<li class="list-group-item adding-wifi-item" onclick="chooseAddingWiFiClick(this)">
             <div class="list-name">${wifiName}</div >
                 <div class="list-wifi">
@@ -615,7 +632,7 @@
         }
 
         // 渲染邻里周围wifi列表
-        function appendAddingWiFiList (nearbyWifiListJson) {
+        function appendAddingWiFiList(nearbyWifiListJson) {
             if (nearbyWifiListJson.code !== 0 && nearbyWifiListJson.code !== '0') {
                 disabledAddWifiBtn();
                 return;
@@ -635,7 +652,7 @@
         }
 
         // 选择要添加的wifi事件
-        function chooseAddingWiFiClick (node) {
+        function chooseAddingWiFiClick(node) {
             // 移除所有列表项的选中状态
             var addingWifiListNode = document.querySelectorAll('.adding-wifi-item');
             addingWifiListNode.forEach(function (addingwifiNode) {
@@ -646,7 +663,7 @@
         }
 
         // 添加wfi事件
-        function addWifiClick () {
+        function addWifiClick() {
             if (!deviceOption.connect) {
                 alert("Bluetooth not connected.")
                 return;
@@ -668,7 +685,7 @@
         }
 
         // 显示AddingWifi区域无数据效果，禁用添加wifi按钮
-        function disabledAddWifiBtn () {
+        function disabledAddWifiBtn() {
             document.getElementById('adding-wifi-no-data').style.display = "block";
             var addWifiBtn = document.getElementById('addWifiBtn');
             addWifiBtn.disabled = true;
@@ -676,7 +693,7 @@
         }
 
         // 显示Adding Wifi区域有数据效果，启用添加wifi按钮
-        function enabledAddWifiBtn () {
+        function enabledAddWifiBtn() {
             document.getElementById('adding-wifi-no-data').style.display = "none";
             var addWifiBtn = document.getElementById('addWifiBtn');
             addWifiBtn.disabled = false;
@@ -684,7 +701,7 @@
         }
 
         // 显示Memorized Wifi区域无数据效果，禁用删除wifi按钮
-        function disabledMemorizedWifiBtn () {
+        function disabledMemorizedWifiBtn() {
             document.getElementById('memorized-wifi-no-data').style.display = "block";
             var addWifiBtn = document.getElementById('removeWifiBtn');
             addWifiBtn.disabled = true;
@@ -692,7 +709,7 @@
         }
 
         // 显示Adding Wifi区域无数据效果，启用添加wifi按钮
-        function enabledMemorizedWifiBtn () {
+        function enabledMemorizedWifiBtn() {
             document.getElementById('memorized-wifi-no-data').style.display = "none";
             var addWifiBtn = document.getElementById('removeWifiBtn');
             addWifiBtn.disabled = false;
