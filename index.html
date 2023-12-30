@@ -306,31 +306,13 @@
                     },
                     {
                         "ssid": "YD"
+                    },
+                    {
+                        "ssid": "harden"
                     }
                 ],
                 "code": 0
             });
-            // appendMemorizrdWiFiList({
-            //     "msg": [
-            //         {
-            //             "ssid": "a1"
-            //         },
-            //         {
-            //             "ssid": "a2"
-            //         }, {
-            //             "ssid": "a3"
-            //         },
-            //         {
-            //             "ssid": "a4"
-            //         }, {
-            //             "ssid": "a5"
-            //         },
-            //         {
-            //             "ssid": "a6"
-            //         }
-            //     ],
-            //     "code": 0
-            // });
         };
 
         function disableButtons() {
@@ -353,7 +335,7 @@
         }
         let deleteName = ''
         var device, service;
-
+        var isWifiList = true
         /*
          监听点击连接蓝牙事件
          */
@@ -497,7 +479,6 @@
         async function addWifi(ssid, pwd) {
             const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
             console.log('Write AddWifi Command-->', JSON.stringify(cmd));
-            toggleLoading('loading', 'adding');
             await startNotifications();
             writeCommand(deviceOption.characteristicWriteChannel, cmd);
         }
@@ -531,6 +512,9 @@
             // TODO 需等设备端给接口定义
             const cmd = { cmd: 4 }
             console.log('Write NearbyWifi Command-->', JSON.stringify(cmd));
+            if (isWifiList) {
+                toggleLoading('loading', 'adding');
+            }
             await startNotifications();
             writeCommand(deviceOption.characteristicWriteChannel, cmd);
         }
@@ -547,10 +531,9 @@
                 // 添加wifi
                 console.log('Adding wifi responese-->', response.msg);
                 if (response.code !== 0 && response.code !== '0') {
-                    alert('Failed to add WiFi. Reason: ',response.msg);
+                    alert('Failed to add WiFi. Reason: ' + response.msg);
                     return;
                 }
-                alert('WiFi network has been successfully added.')
                 fetchMemorizedWifiList();
             }
             if (response.cmd === 2) {
@@ -564,7 +547,6 @@
                     alert('Delete memorized WiFi failed.');
                     return;
                 }
-                alert('WiFi network has been successfully removed.')
                 fetchMemorizedWifiList();
             }
             if (response.cmd === 4) {
@@ -684,7 +666,9 @@
 
         // 渲染邻里周围wifi列表
         function appendAddingWiFiList(nearbyWifiListJson) {
-            toggleLoading('loaded', 'adding');
+            if (isWifiList) {
+                toggleLoading('loaded', 'adding');
+            }
             // toggleLoading('loaded', 'memorized')
             if (nearbyWifiListJson.code !== 0 && nearbyWifiListJson.code !== '0') {
                 disabledAddWifiBtn();
@@ -699,6 +683,7 @@
             nearbyWifiList.forEach(function (wifi) {
                 wifiTempalte += buildNearbyWifiTempalte(wifi.ssid);
             });
+            isWifiList = true
             document.getElementById('adding-wifi-no-data').style.display = "none";
             var addingWifiNode = document.getElementById('adding-wifi');
             addingWifiNode.innerHTML = wifiTempalte;
@@ -733,7 +718,7 @@
             if (pwd === null || pwd === undefined || pwd.trim() === '') {
                 alert("Please enter the WiFi password.")
             }
-            toggleLoading('loading', 'memorized');
+            isWifiList = false
             // 密码同步给蓝牙设备
             addWifi(ssId, pwd);
             // todo 渲染 记忆wifi列表
