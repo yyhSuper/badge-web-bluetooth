@@ -293,26 +293,26 @@
                 disableButtons();
             }
             // todo debug使用，后期删除
-            appendAddingWiFiList({
-                "msg": [
-                    {
-                        "ssid": "SuperLucky_2.4G"
-                    },
-                    {
-                        "ssid": "SuperLucky_2"
-                    },
-                    {
-                        "ssid": "YD_5G"
-                    },
-                    {
-                        "ssid": "YD"
-                    },
-                    {
-                        "ssid": "harden"
-                    }
-                ],
-                "code": 0
-            });
+            // appendAddingWiFiList({
+            //     "msg": [
+            //         {
+            //             "ssid": "SuperLucky_2.4G"
+            //         },
+            //         {
+            //             "ssid": "SuperLucky_2"
+            //         },
+            //         {
+            //             "ssid": "YD_5G"
+            //         },
+            //         {
+            //             "ssid": "YD"
+            //         },
+            //         {
+            //             "ssid": "harden"
+            //         }
+            //     ],
+            //     "code": 0
+            // });
         };
 
         function disableButtons() {
@@ -333,7 +333,6 @@
             characteristicReadChannel: null,
             connect: false
         }
-        let deleteName = ''
         var device, service;
         var isWifiList = true
         /*
@@ -390,12 +389,14 @@
                     // 获取GATT服务
                     await connectDeviceAndCacheCharacteristics();
                     // 获取wifi记忆列表
-                    await fetchMemorizedWifiList();
-                    // 获取周围空间wifi列表
-                    //addWifi('SuperLucky_2.4G', 'TK4PTNHC');
+                    fetchMemorizedWifiList().then(() => {
+                        // 获取周围空间wifi列表
+                        fetchNearbyWifiList();
+                    });
                 }
             } catch (error) {
                 console.log('Argh! ' + error);
+                alert('Argh! ' + error);
             }
         }
 
@@ -434,7 +435,6 @@
             try {
                 rest()
                 disConnecthandleDom();
-                // await connectDeviceAndCacheCharacteristics()
             } catch (error) {
                 console.log('Argh! ' + error);
             }
@@ -480,18 +480,21 @@
             const cmd = { cmd: 1, data: { ssid: ssid, pwd: pwd, } }
             console.log('Write AddWifi Command-->', JSON.stringify(cmd));
             await startNotifications();
-            writeCommand(deviceOption.characteristicWriteChannel, cmd);
+            await writeCommand(deviceOption.characteristicWriteChannel, cmd);
         }
 
         /*
         从设备端拉取wifi记忆列表
         */
         async function fetchMemorizedWifiList() {
-            const cmd = { cmd: 2 }
-            console.log('Write MemorizedWifi Command-->', JSON.stringify(cmd));
-            toggleLoading('loading', 'memorized');
-            await startNotifications();
-            writeCommand(deviceOption.characteristicWriteChannel, cmd);
+            return new Promise(async (resolve) => {
+                const cmd = { cmd: 2 };
+                console.log('Write MemorizedWifi Command-->', JSON.stringify(cmd));
+                toggleLoading('loading', 'memorized');
+                await startNotifications();
+                await writeCommand(deviceOption.characteristicWriteChannel, cmd);
+                resolve();
+            });
         }
 
         /*
@@ -502,7 +505,7 @@
             console.log('Write Remove MemorizedWifi Command-->', JSON.stringify(cmd));
             // toggleLoading('loading', 'memorized');
             await startNotifications();
-            writeCommand(deviceOption.characteristicWriteChannel, cmd);
+            await writeCommand(deviceOption.characteristicWriteChannel, cmd);
         }
 
         /*
@@ -516,7 +519,7 @@
                 toggleLoading('loading', 'adding');
             }
             await startNotifications();
-            writeCommand(deviceOption.characteristicWriteChannel, cmd);
+            await writeCommand(deviceOption.characteristicWriteChannel, cmd);
         }
 
         /**
@@ -556,16 +559,22 @@
             event.target.removeEventListener('characteristicvaluechanged', new function () {
                 console.log('移除监听');
             });
+            console.log(111);
         }
 
         // 写指令
-        async function writeCommand(characteristic, data) {
-            try {
-                await characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)));
-                console.log('commond send success', data);
-            } catch (error) {
-                console.error('指令发送失败:', error);
-            }
+        function writeCommand(characteristic, data) {
+            return new Promise((resolve, reject) => {
+                characteristic.writeValue(new TextEncoder().encode(JSON.stringify(data)))
+                    .then(() => {
+                        console.log('Command send success', data);
+                        resolve();
+                    })
+                    .catch(error => {
+                        console.error('指令发送失败:', error);
+                        reject(error);
+                    });
+            });
         }
 
         // 构建记忆wifi模板
