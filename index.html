@@ -109,14 +109,6 @@
             font-size: 1rem !important;
         }
 
-        .form-floating>label {
-            font-size: 0.8rem !important;
-        }
-
-        #floatingPassword {
-            border-color: #f0f0f0;
-        }
-
         .console-output-container {
             position: fixed;
             top: 20px;
@@ -145,14 +137,6 @@
             padding: 5px 10px;
             cursor: pointer;
             border-radius: 5px;
-        }
-
-        .toggle-password {
-            position: absolute;
-            top: 50%;
-            left: 93%;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
         }
 
         .spinner-border {
@@ -247,12 +231,6 @@
                     <div class="spinner-border" role="status"></div>
                 </div>
                 <div class="no-data" id="adding-wifi-no-data">No Data</div>
-                <!-- <div class="form-floating mb-3 mt-4">
-                    <!-- <input type="password" id="pwd" class="form-control rounded-3" placeholder="Password"
-                        maxlength="20"> -->
-                <!-- <i class="bi bi-eye-slash toggle-password" id="togglePassword"></i> -->
-                <!-- <label for="floatingPassword">Password</label> -->
-                <!-- </div> -->
                 <div class="pass-title">Password</div>
                 <div class="input-con">
                     <input type="text" id="pwd" maxlength="20">
@@ -303,17 +281,6 @@
 
             return false; // 浏览器不符合要求
         };
-
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#pwd');
-        togglePassword.addEventListener('click', () => {
-            // Toggle the type attribute using
-            // getAttribure() method
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            // Toggle the eye and bi-eye icon
-            togglePassword.classList.toggle('bi-eye');
-        });
 
         window.onload = function () {
             if (!isWebBluetoothSupported()) {
